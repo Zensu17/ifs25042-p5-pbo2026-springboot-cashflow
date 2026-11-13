@@ -65,6 +65,7 @@ class EntityAndUseCaseTest {
         Transaction t1 = new Transaction(1, 10, "Gaji", 5_000_000L, TransactionType.INCOME);
         Transaction t2 = new Transaction(2, 10, "Makan", 25_000L, TransactionType.EXPENSE, "proofs/a.png");
         Transaction t3 = new Transaction(3, 10, null, 100_000L, null, null, fixedTime);
+        Transaction t4 = new Transaction(4, 10, "Tanpa waktu", 1L, TransactionType.INCOME, null, null);
 
         assertEquals(1, t1.getId());
         assertEquals(10, t1.getUserId());
@@ -80,6 +81,7 @@ class EntityAndUseCaseTest {
         assertEquals("", t3.getDescription());
         assertEquals(TransactionType.INCOME, t3.getType());
         assertEquals(fixedTime, t3.getCreatedAt());
+        assertTrue(t4.getCreatedAt() != null);
 
         t1.changeDescription(null);
         assertEquals("", t1.getDescription());
@@ -119,10 +121,11 @@ class EntityAndUseCaseTest {
 
         Transaction inc = useCase.addIncome(1, "Gaji Bulanan", 5_000_000L);
         Transaction exp = useCase.addExpense(1, "Kopi Pagi", 25_000L);
+        useCase.addIncome(2, "User Lain", 100L);
         assertEquals(5_000_000L, useCase.getTotalIncome(1));
         assertEquals(25_000L, useCase.getTotalExpense(1));
         assertEquals(4_975_000L, useCase.getBalance(1));
-        assertEquals(2, useCase.getAllTransactions().size());
+        assertEquals(3, useCase.getAllTransactions().size());
         assertEquals(1, useCase.searchTransactions(1, "kopi").size());
         assertEquals(2, useCase.sortTransactions(1, SortOption.AMOUNT_DESC).size());
 
@@ -130,6 +133,9 @@ class EntityAndUseCaseTest {
         assertEquals("-Rp 25,000.00", presenter.formatMoney(-25_000L));
         assertEquals("Saldo: Rp 4,975,000.00", presenter.formatBalance(4_975_000L));
         assertTrue(presenter.format(inc).contains("Rp 5,000,000.00"));
+        assertEquals("15/03/2026 10:30", presenter.formatCreatedAt(
+            new Transaction(3, 1, "Tanggal", 1, TransactionType.INCOME, null,
+                LocalDateTime.of(2026, 3, 15, 10, 30))));
         assertTrue(presenter.showTransactions(List.of(inc, exp)).contains("Saldo: Rp 4,975,000.00"));
         assertTrue(presenter.showTransactions(List.of()).contains("belum tersedia"));
         assertTrue(presenter.showSearchResults(List.of(exp), "kopi").contains("Kopi Pagi"));
@@ -143,14 +149,24 @@ class EntityAndUseCaseTest {
         assertTrue(presenter.showValidationError("err").contains("err"));
 
         useCase.updateTransaction(inc.getId(), "Gaji Pokok", 6_000_000L, TransactionType.INCOME, "proofs/slip.png", false);
+        useCase.updateTransaction(inc.getId(), null, null, null, null, false);
         useCase.updateTransactionForUser(1, inc.getId(), null, null, null, null, true);
         assertNull(repo.findById(inc.getId()).orElseThrow().getProofPath());
 
         assertThrows(ValidationException.class, () -> useCase.addIncome(1, " ", 100));
+        assertThrows(ValidationException.class, () -> useCase.addTransaction(1, null, 100, TransactionType.INCOME));
         assertThrows(ValidationException.class, () -> useCase.addIncome(1, "Valid", 0));
         assertThrows(ValidationException.class, () -> useCase.addTransaction(1, "Valid", 100, null));
         assertThrows(ValidationException.class, () -> useCase.removeTransactionForUser(2, inc.getId()));
         assertThrows(EntityNotFoundException.class, () -> useCase.removeTransaction(999));
+        assertThrows(EntityNotFoundException.class,
+            () -> useCase.updateTransaction(999, "Valid", 100L, TransactionType.INCOME, null, false));
+        assertThrows(EntityNotFoundException.class,
+            () -> useCase.updateTransactionForUser(1, 999, null, null, null, null, false));
+        assertThrows(ValidationException.class,
+            () -> useCase.updateTransaction(inc.getId(), " ", null, null, null, false));
+        assertThrows(ValidationException.class,
+            () -> useCase.updateTransaction(inc.getId(), null, 0L, null, null, false));
 
         useCase.removeTransactionForUser(1, exp.getId());
         assertEquals(1, useCase.getTransactionsByUser(1).size());
@@ -177,6 +193,29 @@ class EntityAndUseCaseTest {
         assertThrows(ValidationException.class, () -> auth.register("budi", "1234", "Dup"));
         assertThrows(ValidationException.class, () -> auth.login("budi", "salah"));
         assertThrows(EntityNotFoundException.class, () -> users.getUser(999));
+        assertThrows(ValidationException.class, () -> auth.register(null, "1234", "Nama"));
+        assertThrows(ValidationException.class, () -> auth.register(" ", "1234", "Nama"));
+        assertThrows(ValidationException.class, () -> auth.register("nama", "123", "Nama"));
+        assertThrows(ValidationException.class, () -> auth.register("nama", null, "Nama"));
+        assertThrows(ValidationException.class, () -> auth.register("nama", "1234", " "));
+        assertThrows(ValidationException.class, () -> auth.register("nama", "1234", null));
+        assertThrows(ValidationException.class, () -> auth.login(null, "1234"));
+        assertThrows(ValidationException.class, () -> auth.login(" ", "1234"));
+        assertThrows(ValidationException.class, () -> auth.login("budi", ""));
+        assertThrows(ValidationException.class, () -> auth.login("missing", "1234"));
+        assertThrows(ValidationException.class, () -> auth.login("budi", null));
+        assertThrows(ValidationException.class, () -> auth.ensureRootAdmin(" ", "1234"));
+        assertThrows(ValidationException.class, () -> auth.ensureRootAdmin("root", ""));
+        assertThrows(ValidationException.class, () -> auth.ensureRootAdmin(null, "1234"));
+        assertThrows(ValidationException.class, () -> auth.ensureRootAdmin("root", null));
+        assertThrows(ValidationException.class, () -> users.updateProfile(registered.getId(), " ", null));
+        assertThrows(ValidationException.class, () -> users.updateProfile(registered.getId(), null, null));
+        assertThrows(ValidationException.class, () -> users.updateProfile(registered.getId(), "Nama", "123"));
+        users.updateProfile(registered.getId(), "Nama Tetap", null);
+        users.updateProfile(registered.getId(), "Nama Tetap", " ");
+        assertThrows(ValidationException.class, () -> users.updatePhoto(registered.getId(), " "));
+        assertThrows(ValidationException.class, () -> users.updatePhoto(registered.getId(), null));
+        assertThrows(EntityNotFoundException.class, () -> users.updatePhoto(999, "profiles/missing.png"));
     }
 
     private static void assertNotNull(Object value) {

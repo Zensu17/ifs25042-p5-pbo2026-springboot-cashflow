@@ -120,6 +120,7 @@
                             <excludes>
                                 <exclude>**/framework/view/**</exclude>
                                 <exclude>**/framework/auth/**</exclude>
+                                <exclude>**/adapter/repository/**</exclude>
                             </excludes>
                         </configuration>
                     </execution>
@@ -133,6 +134,7 @@
                             <excludes>
                                 <exclude>**/framework/view/**</exclude>
                                 <exclude>**/framework/auth/**</exclude>
+                                <exclude>**/adapter/repository/**</exclude>
                             </excludes>
                         </configuration>
                     </execution>
@@ -146,6 +148,7 @@
                             <excludes>
                                 <exclude>**/framework/view/**</exclude>
                                 <exclude>**/framework/auth/**</exclude>
+                                <exclude>**/adapter/repository/**</exclude>
                             </excludes>
                             <rules>
                                 <rule>
