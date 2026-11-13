@@ -10,6 +10,7 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.delcom.ifs25042springbootcashflow.adapter.presenter.FinancePresenter;
@@ -73,15 +74,33 @@ public class UserTransactionsView extends VerticalLayout implements HasUrlParame
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         User current = AuthSession.currentUser().orElse(null);
-        if (current == null || !current.isAdmin()) {
+        if (current == null) {
+            event.forwardTo(LoginView.class);
+            return;
+        }
+        if (!current.isAdmin()) {
             event.forwardTo(FinanceView.class);
         }
     }
 
     @Override
-    public void setParameter(BeforeEvent event, Integer userId) {
+    public void setParameter(BeforeEvent event, @OptionalParameter Integer userId) {
         User current = AuthSession.currentUser().orElse(null);
-        if (current == null || !current.isAdmin()) {
+        if (current == null) {
+            event.forwardTo(LoginView.class);
+            return;
+        }
+        if (!current.isAdmin()) {
+            event.forwardTo(FinanceView.class);
+            return;
+        }
+        if (userId == null) {
+            title.setText("Semua Transaksi Pengguna");
+            var transactions = financeUseCase.getAllTransactions();
+            balanceLabel.setText("Total transaksi: " + transactions.size());
+            grid.setItems(transactions);
+            empty.setVisible(transactions.isEmpty());
+            grid.setVisible(!transactions.isEmpty());
             return;
         }
         try {

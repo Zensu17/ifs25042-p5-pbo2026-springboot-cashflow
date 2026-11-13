@@ -52,7 +52,12 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver, AfterN
         configureHeaderAvatar();
         refreshHeaderAvatar(AuthSession.currentUser().orElse(null));
 
-        HorizontalLayout header = new HorizontalLayout(new DrawerToggle(), brandTitle, headerAvatar);
+        DrawerToggle drawerToggle = new DrawerToggle();
+        drawerToggle.getElement().setAttribute("aria-label", "Buka atau tutup navigasi");
+
+        HorizontalLayout header = new HorizontalLayout(drawerToggle, brandTitle, headerAvatar);
+        header.getElement().setAttribute("role", "banner");
+        header.getElement().setAttribute("aria-label", "Header Aplikasi");
         header.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
         header.expand(brandTitle);
         header.setWidthFull();
@@ -128,14 +133,15 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver, AfterN
             identityItem.setEnabled(false);
             identityItem.getStyle().set("cursor", "default");
 
-            var profileItem = accountMenu.addItem(menuItemContent(VaadinIcon.USER, "Profil", "#4B5563", "#1F2937"), event ->
-                    UI.getCurrent().navigate(ProfileView.class));
+            var profileItem = accountMenu.addItem(menuItemContent(VaadinIcon.USER, "Profil", "#4B5563", "#1F2937"),
+                    event -> UI.getCurrent().navigate(ProfileView.class));
             profileItem.getStyle().set("cursor", "pointer");
 
-            var logoutItem = accountMenu.addItem(menuItemContent(VaadinIcon.SIGN_OUT, "Keluar", "#DC2626", "#DC2626"), event -> {
-                AuthSession.logout();
-                UI.getCurrent().getPage().setLocation("login");
-            });
+            var logoutItem = accountMenu.addItem(menuItemContent(VaadinIcon.SIGN_OUT, "Keluar", "#DC2626", "#DC2626"),
+                    event -> {
+                        AuthSession.logout();
+                        UI.getCurrent().getPage().setLocation("login");
+                    });
             logoutItem.getStyle().set("cursor", "pointer");
         });
     }
@@ -245,6 +251,8 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver, AfterN
         });
 
         VerticalLayout drawer = new VerticalLayout(brandHeader, menuList);
+        drawer.getElement().setAttribute("role", "navigation");
+        drawer.getElement().setAttribute("aria-label", "Menu Navigasi");
         drawer.setPadding(false);
         drawer.setSpacing(false);
         drawer.setSizeFull();
@@ -258,8 +266,7 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver, AfterN
             String label,
             VaadinIcon iconType,
             Class<? extends Component> view,
-            String pathPrefix
-    ) {
+            String pathPrefix) {
         Icon icon = iconType.create();
         icon.setSize("1.05rem");
         icon.getStyle().set("color", "#4B5563");

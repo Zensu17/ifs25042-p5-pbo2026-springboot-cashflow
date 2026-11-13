@@ -19,10 +19,12 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import javax.sql.DataSource;
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -68,28 +70,39 @@ class AppConfigTest {
         verify(registration).addResourceLocations(anyString());
     }
 
-        @Test
-        void cachesHashedVaadinAssetsOnly() throws Exception {
-        var filter = new AppConfig().staticAssetCacheFilter().getFilter();
+    @Test
+    void cachesStaticAssets() throws Exception {
+        AppConfig config = new AppConfig();
+        var filter = config.staticAssetCacheFilter().getFilter();
 
         MockHttpServletResponse cachedResponse = new MockHttpServletResponse();
         filter.doFilter(
-            new MockHttpServletRequest("GET", "/VAADIN/build/app.js"),
-            cachedResponse,
-            new MockFilterChain());
+                new MockHttpServletRequest("GET", "/VAADIN/build/app.js"),
+                cachedResponse,
+                new MockFilterChain());
 
         assertEquals(
-            "public, max-age=31536000, immutable",
-            cachedResponse.getHeader("Cache-Control"));
+                "public, max-age=31536000, immutable",
+                cachedResponse.getHeader("Cache-Control"));
 
         MockHttpServletResponse uncachedResponse = new MockHttpServletResponse();
         filter.doFilter(
-            new MockHttpServletRequest("GET", "/styles.css"),
-            uncachedResponse,
-            new MockFilterChain());
+                new MockHttpServletRequest("GET", "/login"),
+                uncachedResponse,
+                new MockFilterChain());
 
         assertNull(uncachedResponse.getHeader("Cache-Control"));
-        }
+
+        assertTrue(config.isStaticAsset("/VAADIN/build/app.js"));
+        assertTrue(config.isStaticAsset("/lumo/lumo.css"));
+        assertTrue(config.isStaticAsset("/icons/icon.png"));
+        assertTrue(config.isStaticAsset("/styles.css"));
+        assertTrue(config.isStaticAsset("/test.js"));
+        assertTrue(config.isStaticAsset("/image.png"));
+        assertTrue(config.isStaticAsset("/favicon.ico"));
+        assertFalse(config.isStaticAsset("/login"));
+        assertFalse(config.isStaticAsset(null));
+    }
 
     private DataSource createDataSource() {
         JdbcDataSource dataSource = new JdbcDataSource();

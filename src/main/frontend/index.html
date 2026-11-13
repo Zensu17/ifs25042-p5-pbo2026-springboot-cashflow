@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="robots" content="index, follow" />
+  <meta name="description" content="Kelola pemasukan, pengeluaran, dan saldo cashflow Anda." />
+  <title>Cashflow</title>
+  <link rel="preload" as="style" href="/styles.css" />
+  <style>
+    html, body, #outlet {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+    }
+
+    @supports (-webkit-touch-callout: none) {
+      @media (display-mode: standalone) {
+        html {
+          height: 100lvh;
+        }
+      }
+    }
+  </style>
+  <script>
+    (function() {
+      const markIndicator = () => {
+        document.querySelectorAll('vaadin-connection-indicator').forEach(function(el) {
+          el.setAttribute('aria-hidden', 'true');
+        });
+      };
+      markIndicator();
+      const obs = new MutationObserver(markIndicator);
+      obs.observe(document.documentElement, { childList: true, subtree: true });
+    })();
+  </script>
+</head>
+<body>
+  <div id="outlet"></div>
+</body>
+</html>
+

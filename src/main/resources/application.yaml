@@ -11,11 +11,19 @@ spring:
       mode: never
   devtools:
     restart:
-      enabled: true
+      enabled: false
       poll-interval: 1s
       quiet-period: 400ms
     liveload:
-      enabled: true
+      enabled: false
+  web:
+    resources:
+      cache:
+        period: 31536000
+        cachecontrol:
+          max-age: 365d
+          cache-public: true
+          immutable: true
 
 server:
   port: ${APP_PORT:${PORT:8080}}
@@ -25,6 +33,10 @@ server:
       cookie:
         name: CASHFLOWSESSION
         http-only: true
+  compression:
+    enabled: true
+    min-response-size: 1024
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json,image/svg+xml,application/wasm
 
 app:
   root-username: ${ROOT_USERNAME:admin}
@@ -34,4 +46,4 @@ app:
 vaadin:
   launch-browser: false
   liveReload:
-    enabled: true
+    enabled: false

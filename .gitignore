@@ -27,7 +27,7 @@ node/
 pnpm-lock.yaml
 .pnpm-store/
 src/main/frontend/generated/
-src/main/frontend/index.html
+src/main/bundles/
 vite.generated.ts
 webpack.generated.js
 types.d.ts

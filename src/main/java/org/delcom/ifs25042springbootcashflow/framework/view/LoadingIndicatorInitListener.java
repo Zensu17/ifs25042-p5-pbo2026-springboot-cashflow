@@ -19,6 +19,21 @@ public class LoadingIndicatorInitListener implements VaadinServiceInitListener {
             conf.setFirstDelay(150);
             conf.setSecondDelay(600);
             conf.setThirdDelay(1500);
+
+            uiEvent.getUI().getPage().executeJs(
+                    "const hideIndicator = () => {" +
+                    "  const el = document.querySelector('vaadin-connection-indicator');" +
+                    "  if (el) {" +
+                    "    el.setAttribute('aria-hidden', 'true');" +
+                    "    return true;" +
+                    "  }" +
+                    "  return false;" +
+                    "};" +
+                    "if (!hideIndicator()) {" +
+                    "  const obs = new MutationObserver(() => { if (hideIndicator()) obs.disconnect(); });" +
+                    "  obs.observe(document.body, { childList: true });" +
+                    "}"
+            );
         });
     }
 }

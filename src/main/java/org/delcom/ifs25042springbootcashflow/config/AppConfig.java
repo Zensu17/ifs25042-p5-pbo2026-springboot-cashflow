@@ -96,16 +96,29 @@ public class AppConfig {
                     jakarta.servlet.http.HttpServletResponse response,
                     jakarta.servlet.FilterChain filterChain
             ) throws jakarta.servlet.ServletException, java.io.IOException {
-                filterChain.doFilter(request, response);
                 String path = request.getRequestURI();
-                if (path.startsWith(request.getContextPath() + "/VAADIN/build/")) {
+                if (isStaticAsset(path)) {
                     response.setHeader("Cache-Control", "public, max-age=" + Duration.ofDays(365).toSeconds() + ", immutable");
                 }
+                filterChain.doFilter(request, response);
             }
         };
         FilterRegistrationBean<OncePerRequestFilter> registration = new FilterRegistrationBean<>(filter);
-        registration.addUrlPatterns("/VAADIN/build/*");
-        registration.setOrder(Integer.MAX_VALUE);
+        registration.addUrlPatterns("/*");
+        registration.setOrder(-1);
         return registration;
+    }
+
+    boolean isStaticAsset(String path) {
+        if (path == null) {
+            return false;
+        }
+        return path.contains("/VAADIN/")
+                || path.contains("/lumo/")
+                || path.contains("/icons/")
+                || path.endsWith(".css")
+                || path.endsWith(".js")
+                || path.endsWith(".png")
+                || path.endsWith(".ico");
     }
 }
