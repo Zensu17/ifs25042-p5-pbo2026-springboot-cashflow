@@ -63,6 +63,7 @@ public class FinanceView extends VerticalLayout {
         this.fileStorage = fileStorage;
 
         setSizeFull();
+        getElement().setAttribute("role", "main");
         setPadding(true);
         setSpacing(false);
         getStyle().set("background", "#F3F4F6");
@@ -87,8 +88,8 @@ public class FinanceView extends VerticalLayout {
     private HorizontalLayout buildSummaryCards() {
         HorizontalLayout summary = new HorizontalLayout(
                 createSummaryCard("Total Transaksi", totalCount, "#F8FAFC", "#475569", "#0F172A"),
-                createSummaryCard("Total Pemasukan", totalIncome, "#DCFCE7", "#16A34A", "#166534"),
-                createSummaryCard("Total Pengeluaran", totalExpense, "#FEE2E2", "#DC2626", "#991B1B"),
+                createSummaryCard("Total Pemasukan", totalIncome, "#DCFCE7", "#166534", "#166534"),
+                createSummaryCard("Total Pengeluaran", totalExpense, "#FEE2E2", "#991B1B", "#991B1B"),
                 createSummaryCard("Saldo", netBalance, "#DBEAFE", "#1D4ED8", "#1E40AF")
         );
         summary.setWidthFull();

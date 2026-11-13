@@ -47,6 +47,7 @@ public class ProfileView extends VerticalLayout {
         this.fileStorage = fileStorage;
 
         setSizeFull();
+        getElement().setAttribute("role", "main");
         setPadding(true);
         setSpacing(false);
         getStyle().set("background", "#F3F4F6");

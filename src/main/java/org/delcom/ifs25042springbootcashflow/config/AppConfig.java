@@ -12,12 +12,15 @@ import org.delcom.ifs25042springbootcashflow.usecase.FinanceUseCase;
 import org.delcom.ifs25042springbootcashflow.usecase.UserUseCase;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.sql.DataSource;
+import java.time.Duration;
 
 /**
  * Composition root Spring: merakit dependency antar-layer.
@@ -82,5 +85,27 @@ public class AppConfig {
                 registry.addResourceHandler("/uploads/**").addResourceLocations(location);
             }
         };
+    }
+
+    @Bean
+    public FilterRegistrationBean<OncePerRequestFilter> staticAssetCacheFilter() {
+        OncePerRequestFilter filter = new OncePerRequestFilter() {
+            @Override
+            protected void doFilterInternal(
+                    jakarta.servlet.http.HttpServletRequest request,
+                    jakarta.servlet.http.HttpServletResponse response,
+                    jakarta.servlet.FilterChain filterChain
+            ) throws jakarta.servlet.ServletException, java.io.IOException {
+                filterChain.doFilter(request, response);
+                String path = request.getRequestURI();
+                if (path.startsWith(request.getContextPath() + "/VAADIN/build/")) {
+                    response.setHeader("Cache-Control", "public, max-age=" + Duration.ofDays(365).toSeconds() + ", immutable");
+                }
+            }
+        };
+        FilterRegistrationBean<OncePerRequestFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.addUrlPatterns("/VAADIN/build/*");
+        registration.setOrder(Integer.MAX_VALUE);
+        return registration;
     }
 }

@@ -33,6 +33,7 @@ public class LoginView extends VerticalLayout {
             return;
         }
         setSizeFull();
+        getElement().setAttribute("role", "main");
         setJustifyContentMode(JustifyContentMode.CENTER);
         setAlignItems(Alignment.CENTER);
         getStyle().set("background", "#F3F4F6");
