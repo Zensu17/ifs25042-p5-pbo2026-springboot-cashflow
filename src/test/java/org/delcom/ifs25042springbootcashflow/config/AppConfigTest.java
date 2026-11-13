@@ -11,13 +11,18 @@ import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.DefaultApplicationArguments;
+import org.springframework.mock.web.MockFilterChain;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 
 import javax.sql.DataSource;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -62,6 +67,29 @@ class AppConfigTest {
         verify(registry).addResourceHandler("/uploads/**");
         verify(registration).addResourceLocations(anyString());
     }
+
+        @Test
+        void cachesHashedVaadinAssetsOnly() throws Exception {
+        var filter = new AppConfig().staticAssetCacheFilter().getFilter();
+
+        MockHttpServletResponse cachedResponse = new MockHttpServletResponse();
+        filter.doFilter(
+            new MockHttpServletRequest("GET", "/VAADIN/build/app.js"),
+            cachedResponse,
+            new MockFilterChain());
+
+        assertEquals(
+            "public, max-age=31536000, immutable",
+            cachedResponse.getHeader("Cache-Control"));
+
+        MockHttpServletResponse uncachedResponse = new MockHttpServletResponse();
+        filter.doFilter(
+            new MockHttpServletRequest("GET", "/styles.css"),
+            uncachedResponse,
+            new MockFilterChain());
+
+        assertNull(uncachedResponse.getHeader("Cache-Control"));
+        }
 
     private DataSource createDataSource() {
         JdbcDataSource dataSource = new JdbcDataSource();
