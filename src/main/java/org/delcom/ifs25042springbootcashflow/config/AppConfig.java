@@ -99,6 +99,23 @@ public class AppConfig {
                 String path = request.getRequestURI();
                 if (isStaticAsset(path)) {
                     response.setHeader("Cache-Control", "public, max-age=" + Duration.ofDays(365).toSeconds() + ", immutable");
+                    jakarta.servlet.http.HttpServletResponseWrapper wrapper = new jakarta.servlet.http.HttpServletResponseWrapper(response) {
+                        @Override
+                        public void setHeader(String name, String value) {
+                            if (!"Cache-Control".equalsIgnoreCase(name)) {
+                                super.setHeader(name, value);
+                            }
+                        }
+
+                        @Override
+                        public void addHeader(String name, String value) {
+                            if (!"Cache-Control".equalsIgnoreCase(name)) {
+                                super.addHeader(name, value);
+                            }
+                        }
+                    };
+                    filterChain.doFilter(request, wrapper);
+                    return;
                 }
                 filterChain.doFilter(request, response);
             }

@@ -79,11 +79,19 @@ class AppConfigTest {
         filter.doFilter(
                 new MockHttpServletRequest("GET", "/VAADIN/build/app.js"),
                 cachedResponse,
-                new MockFilterChain());
+                (req, res) -> {
+                    jakarta.servlet.http.HttpServletResponse httpRes = (jakarta.servlet.http.HttpServletResponse) res;
+                    httpRes.setHeader("Cache-Control", "no-cache");
+                    httpRes.addHeader("Cache-Control", "no-store");
+                    httpRes.setHeader("Content-Type", "application/javascript");
+                    httpRes.addHeader("X-Custom", "test");
+                });
 
         assertEquals(
                 "public, max-age=31536000, immutable",
                 cachedResponse.getHeader("Cache-Control"));
+        assertEquals("application/javascript", cachedResponse.getHeader("Content-Type"));
+        assertEquals("test", cachedResponse.getHeader("X-Custom"));
 
         MockHttpServletResponse uncachedResponse = new MockHttpServletResponse();
         filter.doFilter(

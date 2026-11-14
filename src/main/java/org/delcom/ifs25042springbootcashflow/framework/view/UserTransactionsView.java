@@ -76,10 +76,6 @@ public class UserTransactionsView extends VerticalLayout implements HasUrlParame
         User current = AuthSession.currentUser().orElse(null);
         if (current == null) {
             event.forwardTo(LoginView.class);
-            return;
-        }
-        if (!current.isAdmin()) {
-            event.forwardTo(FinanceView.class);
         }
     }
 
@@ -87,14 +83,13 @@ public class UserTransactionsView extends VerticalLayout implements HasUrlParame
     public void setParameter(BeforeEvent event, @OptionalParameter Integer userId) {
         User current = AuthSession.currentUser().orElse(null);
         if (current == null) {
-            event.forwardTo(LoginView.class);
             return;
         }
-        if (!current.isAdmin()) {
-            event.forwardTo(FinanceView.class);
-            return;
-        }
-        if (userId == null) {
+        int targetUserId = (userId != null && (current.isAdmin() || userId.equals(current.getId())))
+                ? userId
+                : (current.isAdmin() ? 0 : current.getId());
+
+        if (targetUserId == 0 && current.isAdmin()) {
             title.setText("Semua Transaksi Pengguna");
             var transactions = financeUseCase.getAllTransactions();
             balanceLabel.setText("Total transaksi: " + transactions.size());
@@ -103,16 +98,21 @@ public class UserTransactionsView extends VerticalLayout implements HasUrlParame
             grid.setVisible(!transactions.isEmpty());
             return;
         }
+
         try {
-            User owner = userUseCase.getUser(userId);
+            User owner = userUseCase.getUser(targetUserId);
             title.setText("Transaksi milik " + owner.getFullName() + " (@" + owner.getUsername() + ")");
-            var transactions = financeUseCase.getTransactionsByUser(userId);
-            balanceLabel.setText(presenter.formatBalance(financeUseCase.getBalance(userId)));
+            var transactions = financeUseCase.getTransactionsByUser(targetUserId);
+            balanceLabel.setText(presenter.formatBalance(financeUseCase.getBalance(targetUserId)));
             grid.setItems(transactions);
             empty.setVisible(transactions.isEmpty());
             grid.setVisible(!transactions.isEmpty());
         } catch (EntityNotFoundException ex) {
-            event.forwardTo(UsersView.class);
+            title.setText("Transaksi Pengguna");
+            balanceLabel.setText("Pengguna tidak ditemukan");
+            grid.setItems(java.util.List.of());
+            empty.setVisible(true);
+            grid.setVisible(false);
         }
     }
 }
