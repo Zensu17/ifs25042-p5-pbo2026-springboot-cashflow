@@ -25,19 +25,12 @@
   <script>
     (function() {
       const markIndicator = () => {
-        const el = document.querySelector('vaadin-connection-indicator');
-        if (el) {
+        document.querySelectorAll('vaadin-connection-indicator').forEach(function(el) {
           el.setAttribute('aria-hidden', 'true');
-        }
+        });
       };
       markIndicator();
-      const obs = new MutationObserver(() => {
-        const el = document.querySelector('vaadin-connection-indicator');
-        if (el) {
-          el.setAttribute('aria-hidden', 'true');
-          obs.disconnect();
-        }
-      });
+      const obs = new MutationObserver(markIndicator);
       obs.observe(document.documentElement, { childList: true, subtree: true });
     })();
   </script>
@@ -46,3 +39,4 @@
   <div id="outlet"></div>
 </body>
 </html>
+

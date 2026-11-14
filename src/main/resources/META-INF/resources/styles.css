@@ -142,6 +142,7 @@ vaadin-grid.app-grid::part(body-cell) {
   color: #1F2937;
 }
 
+vaadin-grid.app-grid::part(row):hover > ::part(cell),
 vaadin-grid.app-grid::part(body-cell):hover {
   background: #EFF6FF;
 }
