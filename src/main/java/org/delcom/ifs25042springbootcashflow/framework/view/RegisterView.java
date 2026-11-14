@@ -14,6 +14,8 @@ import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLink;
@@ -25,13 +27,12 @@ import org.delcom.ifs25042springbootcashflow.usecase.AuthUseCase;
 
 @Route("register")
 @PageTitle("Registrasi - Cashflow")
-public class RegisterView extends VerticalLayout {
+public class RegisterView extends VerticalLayout implements BeforeEnterObserver {
+
+    private final IUserRepository userRepository;
 
     public RegisterView(AuthUseCase authUseCase, IUserRepository userRepository) {
-        if (AuthSession.currentUser(userRepository).isPresent()) {
-            UI.getCurrent().navigate(FinanceView.class);
-            return;
-        }
+        this.userRepository = userRepository;
         setSizeFull();
         getElement().setAttribute("role", "main");
         setJustifyContentMode(JustifyContentMode.CENTER);
@@ -120,5 +121,12 @@ public class RegisterView extends VerticalLayout {
                 .set("box-sizing", "border-box");
 
         add(card);
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        if (AuthSession.currentUser(userRepository).isPresent()) {
+            event.forwardTo(FinanceView.class);
+        }
     }
 }
