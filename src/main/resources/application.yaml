@@ -45,5 +45,6 @@ app:
 
 vaadin:
   launch-browser: false
+  productionMode: true
   liveReload:
     enabled: false

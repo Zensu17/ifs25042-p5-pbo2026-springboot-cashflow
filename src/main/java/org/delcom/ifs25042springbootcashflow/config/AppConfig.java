@@ -1,5 +1,6 @@
 package org.delcom.ifs25042springbootcashflow.config;
 
+import jakarta.servlet.http.HttpServletResponseWrapper;
 import org.delcom.ifs25042springbootcashflow.adapter.presenter.FinancePresenter;
 import org.delcom.ifs25042springbootcashflow.adapter.repository.JdbcTransactionRepository;
 import org.delcom.ifs25042springbootcashflow.adapter.repository.JdbcUserRepository;
@@ -15,6 +16,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -99,13 +101,30 @@ public class AppConfig {
                 String path = request.getRequestURI();
                 if (isStaticAsset(path)) {
                     response.setHeader("Cache-Control", "public, max-age=" + Duration.ofDays(365).toSeconds() + ", immutable");
+                    HttpServletResponseWrapper wrapper = new HttpServletResponseWrapper(response) {
+                        @Override
+                        public void setHeader(String name, String value) {
+                            if (!"Cache-Control".equalsIgnoreCase(name)) {
+                                super.setHeader(name, value);
+                            }
+                        }
+
+                        @Override
+                        public void addHeader(String name, String value) {
+                            if (!"Cache-Control".equalsIgnoreCase(name)) {
+                                super.addHeader(name, value);
+                            }
+                        }
+                    };
+                    filterChain.doFilter(request, wrapper);
+                    return;
                 }
                 filterChain.doFilter(request, response);
             }
         };
         FilterRegistrationBean<OncePerRequestFilter> registration = new FilterRegistrationBean<>(filter);
         registration.addUrlPatterns("/*");
-        registration.setOrder(-1);
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE);
         return registration;
     }
 
@@ -119,6 +138,7 @@ public class AppConfig {
                 || path.endsWith(".css")
                 || path.endsWith(".js")
                 || path.endsWith(".png")
-                || path.endsWith(".ico");
+                || path.endsWith(".ico")
+                || path.endsWith(".map");
     }
 }

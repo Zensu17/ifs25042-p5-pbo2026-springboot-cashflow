@@ -1,5 +1,6 @@
 package org.delcom.ifs25042springbootcashflow.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.delcom.ifs25042springbootcashflow.adapter.presenter.FinancePresenter;
 import org.delcom.ifs25042springbootcashflow.adapter.storage.FileStorage;
 import org.delcom.ifs25042springbootcashflow.domain.repository.ITransactionRepository;
@@ -71,7 +72,7 @@ class AppConfigTest {
     }
 
     @Test
-    void cachesStaticAssets() throws Exception {
+    void cachesStaticAssetsAndProtectsHeader() throws Exception {
         AppConfig config = new AppConfig();
         var filter = config.staticAssetCacheFilter().getFilter();
 
@@ -79,11 +80,19 @@ class AppConfigTest {
         filter.doFilter(
                 new MockHttpServletRequest("GET", "/VAADIN/build/app.js"),
                 cachedResponse,
-                new MockFilterChain());
+                (req, res) -> {
+                    HttpServletResponse httpRes = (HttpServletResponse) res;
+                    httpRes.setHeader("Cache-Control", "no-cache");
+                    httpRes.addHeader("Cache-Control", "no-store");
+                    httpRes.setHeader("Content-Type", "application/javascript");
+                    httpRes.addHeader("X-Custom-Header", "allowed");
+                });
 
         assertEquals(
                 "public, max-age=31536000, immutable",
                 cachedResponse.getHeader("Cache-Control"));
+        assertEquals("application/javascript", cachedResponse.getHeader("Content-Type"));
+        assertEquals("allowed", cachedResponse.getHeader("X-Custom-Header"));
 
         MockHttpServletResponse uncachedResponse = new MockHttpServletResponse();
         filter.doFilter(
@@ -100,6 +109,7 @@ class AppConfigTest {
         assertTrue(config.isStaticAsset("/test.js"));
         assertTrue(config.isStaticAsset("/image.png"));
         assertTrue(config.isStaticAsset("/favicon.ico"));
+        assertTrue(config.isStaticAsset("/app.js.map"));
         assertFalse(config.isStaticAsset("/login"));
         assertFalse(config.isStaticAsset(null));
     }
